@@ -1,0 +1,38 @@
+Source: lxd
+Section: unknown
+Priority: optional
+Maintainer: Piotr Iwaniuk <piwaniuk@poczta.onet.pl>
+Build-Depends: debhelper (>= 11), golang (>= 1.13)
+Standards-Version: 4.1.3
+Homepage: https://linuxcontainers.org/lxd/
+Vcs-Browser: https://github.com/lxc/lxd/
+Vcs-Git: https://github.com/lxc/lxd.git
+
+Package: lxd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: lxd-client
+Suggests: lxd-tools
+Description: Linux Containers Daemon
+ LXD is a frontend to Linux Containers offering an interface similar to
+ docker. It can manage both containers and virtual machines.
+ 
+Package: lxd-client
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: lxd
+Description: LXD commandline client
+ LXD is a frontend to Linux Containers offering an interface similar to
+ docker. It can manage both containers and virtual machines.
+ .
+ This package contains a commandline client to control LXD.
+
+Package: lxd-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: lxd
+Description: Linux Containers Daemon
+ LXD is a frontend to Linux Containers offering an interface similar to
+ docker. It can manage both containers and virtual machines.
+ .
+ This package contains additional binaries which may be useful when using LXD.

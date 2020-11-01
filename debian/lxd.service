@@ -1,0 +1,20 @@
+[Unit]
+Description=Linux Containers daemon
+After=network-online.target lxc.service lxd.socket
+Requires=network-online.target lxc.service lxd.socket
+
+[Service]
+Environment=LXD_SOCKET=/var/lib/lxd/unix.socket
+ExecStart=/usr/sbin/lxd --group lxd --logfile /var/log/lxd/lxd.log
+ExecStartPost=/usr/sbin/lxd waitready --timeout=600
+KillMode=process
+TimeoutStartSec=300s
+TimeoutStopSec=30s
+Restart=on-failure
+LimitNOFILE=1000000
+LimitNPROC=infinity
+TasksMax=infinity
+
+[Install]
+Also=lxd-container.service lxd.socket
+

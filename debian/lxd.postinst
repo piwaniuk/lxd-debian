@@ -1,0 +1,26 @@
+#!/bin/sh
+# postinst script for lxd
+# see: dh_installdeb(1)
+
+set -e
+
+# create lxd group if it is not already there
+if ! getent group lxd > /dev/null ; then
+        addgroup --system lxd
+fi
+
+# select post install action
+case "$1" in
+    configure)
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

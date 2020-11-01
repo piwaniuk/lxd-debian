@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if ! systectl -q is-active lxd.servcie ; then
+  exit 0
+fi
+
+exec /usr/sbin/lxd shutdown
+

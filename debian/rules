@@ -1,0 +1,124 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+export DH_VERBOSE = 1
+
+
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+
+%:
+	dh $@ --with-systemd
+
+DIST_GOPATH=$(CURDIR)/_dist
+LXD_DEST=debian/lxd
+LXD_CLIENT_DEST=debian/lxd-client
+LXD_TOOLS_DEST=debian/lxd-tools
+
+dist_deps: export GOPATH=$(DIST_GOPATH)
+dist_deps:
+	make deps
+
+
+override_dh_auto_clean:
+	-make -C $(DIST_GOPATH)/deps/dqlite distclean
+	-make -C $(DIST_GOPATH)/deps/raft distclean
+	-rm $(DIST_GOPATH)/deps/dqlite/configure
+	-rm $(DIST_GOPATH)/deps/dqlite/Makefile.in
+	-rm $(DIST_GOPATH)/deps/dqlite/aclocal.m4
+	-rm $(DIST_GOPATH)/deps/dqlite/aminclude_static.am
+	-rm $(DIST_GOPATH)/deps/dqlite/ac/*
+	-rm $(DIST_GOPATH)/deps/dqlite/m4/libtool.m4
+	-rm $(DIST_GOPATH)/deps/dqlite/m4/ltoptions.m4
+	-rm $(DIST_GOPATH)/deps/dqlite/m4/ltsugar.m4
+	-rm $(DIST_GOPATH)/deps/dqlite/m4/ltversion.m4
+	-rm $(DIST_GOPATH)/deps/dqlite/m4/lt~obsolete.m4
+	-rm $(DIST_GOPATH)/deps/raft/configure
+	-rm $(DIST_GOPATH)/deps/raft/Makefile.in
+	-rm $(DIST_GOPATH)/deps/raft/aclocal.m4
+	-rm $(DIST_GOPATH)/deps/raft/aminclude_static.am
+	-rm $(DIST_GOPATH)/deps/raft/ac/*
+	-rm $(DIST_GOPATH)/deps/raft/m4/libtool.m4
+	-rm $(DIST_GOPATH)/deps/raft/m4/ltoptions.m4
+	-rm $(DIST_GOPATH)/deps/raft/m4/ltsugar.m4
+	-rm $(DIST_GOPATH)/deps/raft/m4/ltversion.m4
+	-rm $(DIST_GOPATH)/deps/raft/m4/lt~obsolete.m4
+	-rm -rf $(DIST_GOPATH)/src/github.com/lxc/lxd	
+	-rm -rf $(DIST_GOPATH)/src/github.com/golang/lint
+	-rm -rf $(DIST_GOPATH)/src/github.com/kisielk
+	-rm -rf $(DIST_GOPATH)/src/github.com/pelletier
+	-rm -rf $(DIST_GOPATH)/src/github.com/kisielk
+	-rm -rf $(DIST_GOPATH)/src/github.com/rogpeppe/godeps
+	-rm -rf $(DIST_GOPATH)/src/github.com/tsenart
+	-rm -rf $(DIST_GOPATH)/src/golang.org/x/lint
+	-rm -rf $(DIST_GOPATH)/src/golang.org/x/tools
+
+	-rm -rf $(DIST_GOPATH)/pkg/
+	-rm -rf $(DIST_GOPATH)/bin/
+	rm -rf $(DIST_GOPATH)/src/lxc/
+	ln -s ../../../../ $(DIST_GOPATH)/src/github.com/lxc/lxd
+	dh_auto_clean
+
+
+COPY_SRC=Makefile client fuidshift lxc lxc-to-lxd lxd lxd-agent lxd-benchmark lxd-p2c po scripts shared test
+
+override_dh_auto_build: export GOPATH=$(DIST_GOPATH)
+override_dh_auto_build: export CGO_CFLAGS=-I$(DIST_GOPATH)/deps/raft/include/ -I$(DIST_GOPATH)/deps/dqlite/include/
+override_dh_auto_build: export CGO_LDFLAGS=-L$(DIST_GOPATH)/deps/raft/.libs -L$(DIST_GOPATH)/deps/dqlite/.libs/
+override_dh_auto_build: export LD_LIBRARY_PATH=$(DIST_GOPATH)/deps/raft/.libs/:$(DIST_GOPATH)/deps/dqlite/.libs/
+override_dh_auto_build: export CGO_LDFLAGS_ALLOW=-Wl,-wrap,pthread_create
+override_dh_auto_build: dist_deps
+#	rm $(DIST_GOPATH)/src/github.com/lxc/lxd
+#	git clone --branch lxd-4.6 https://github.com/lxc/lxd/ $(DIST_GOPATH)/src/github.com/lxc/lxd/
+	mkdir -p $(DIST_GOPATH)/src/lxc/lxd/
+	cp -r $(COPY_SRC) $(DIST_GOPATH)/src/lxc/lxd/
+	make -C $(DIST_GOPATH)/src/lxc/lxd/
+
+
+
+override_dh_auto_test: export GOPATH=$(DIST_GOPATH)
+override_dh_auto_test: export CGO_CFLAGS=-I$(DIST_GOPATH)/deps/raft/include/ -I$(DIST_GOPATH)/deps/dqlite/include/
+override_dh_auto_test: export CGO_LDFLAGS=-L$(DIST_GOPATH)/deps/raft/.libs -L$(DIST_GOPATH)/deps/dqlite/.libs/
+override_dh_auto_test: export LD_LIBRARY_PATH=$(DIST_GOPATH)/deps/raft/.libs/:$(DIST_GOPATH)/deps/dqlite/.libs/
+override_dh_auto_test: export CGO_LDFLAGS_ALLOW=-Wl,-wrap,pthread_create
+override_dh_auto_test:
+	git clone -n https://github.com/golang/lint/ $(DIST_GOPATH)/src/github.com/golang/lint/
+	git -C $(DIST_GOPATH)/src/github.com/golang/lint/ checkout 06c8688
+	echo "#!/bin/bash" > $(DIST_GOPATH)/src/lxc/lxd/test/main.sh
+	make -C $(DIST_GOPATH)/src/lxc/lxd/ check
+
+override_dh_auto_install:
+	echo Should install to: "$(DESTDIR)"
+	# Install LXD libraries
+	install -d $(LXD_DEST)/usr/lib/
+	install $(DIST_GOPATH)/deps/raft/.libs/libraft.so.0.0.7 $(LXD_DEST)/usr/lib/
+	install $(DIST_GOPATH)/deps/dqlite/.libs/libdqlite.so.0.0.1 $(LXD_DEST)/usr/lib/
+	/sbin/ldconfig -nN $(LXD_DEST)/usr/lib/
+	# Install LXD "libexec" binaries
+	install -d $(LXD_DEST)/usr/lib/lxd/
+	install $(DIST_GOPATH)/bin/lxd-agent $(LXD_DEST)/usr/lib/lxd
+	install $(DIST_GOPATH)/bin/fuidshift $(LXD_DEST)/usr/lib/lxd
+	install debian/lxd-container-shutdown $(LXD_DEST)/usr/lib/lxd
+	# Install LXD sbin binaries
+	install -d $(LXD_DEST)/usr/sbin/
+	install $(DIST_GOPATH)/bin/lxd $(LXD_DEST)/usr/sbin/
+	# Install LXD client binaries
+	install -d $(LXD_CLIENT_DEST)/usr/bin/
+	install $(DIST_GOPATH)/bin/lxc $(LXD_CLIENT_DEST)/usr/bin/
+  # Install LXD tools binaries
+	install -d $(LXD_TOOLS_DEST)/usr/bin/
+	install $(DIST_GOPATH)/bin/lxd-benchmark $(LXD_TOOLS_DEST)/usr/bin/
+	install $(DIST_GOPATH)/bin/lxd-p2c $(LXD_TOOLS_DEST)/usr/bin/
+
+override_dh_installsystemd:
+	install -d $(LXD_DEST)/lib/systemd/system/
+	install debian/lxd-container.service $(LXD_DEST)/lib/systemd/system/
+	dh_installsystemd
+
