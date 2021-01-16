@@ -24,7 +24,7 @@ LXD_TOOLS_DEST=debian/lxd-tools
 
 dist_deps: export GOPATH=$(DIST_GOPATH)
 dist_deps:
-	make deps
+	echo skip make deps
 
 
 override_dh_auto_clean:
@@ -75,8 +75,6 @@ override_dh_auto_build: export CGO_LDFLAGS=-L$(DIST_GOPATH)/deps/raft/.libs -L$(
 override_dh_auto_build: export LD_LIBRARY_PATH=$(DIST_GOPATH)/deps/raft/.libs/:$(DIST_GOPATH)/deps/dqlite/.libs/
 override_dh_auto_build: export CGO_LDFLAGS_ALLOW=-Wl,-wrap,pthread_create
 override_dh_auto_build: dist_deps
-#	rm $(DIST_GOPATH)/src/github.com/lxc/lxd
-#	git clone --branch lxd-4.6 https://github.com/lxc/lxd/ $(DIST_GOPATH)/src/github.com/lxc/lxd/
 	mkdir -p $(DIST_GOPATH)/src/lxc/lxd/
 	cp -r $(COPY_SRC) $(DIST_GOPATH)/src/lxc/lxd/
 	make -C $(DIST_GOPATH)/src/lxc/lxd/
@@ -84,9 +82,6 @@ override_dh_auto_build: dist_deps
 
 
 override_dh_auto_test: export GOPATH=$(DIST_GOPATH)
-override_dh_auto_test: export CGO_CFLAGS=-I$(DIST_GOPATH)/deps/raft/include/ -I$(DIST_GOPATH)/deps/dqlite/include/
-override_dh_auto_test: export CGO_LDFLAGS=-L$(DIST_GOPATH)/deps/raft/.libs -L$(DIST_GOPATH)/deps/dqlite/.libs/
-override_dh_auto_test: export LD_LIBRARY_PATH=$(DIST_GOPATH)/deps/raft/.libs/:$(DIST_GOPATH)/deps/dqlite/.libs/
 override_dh_auto_test: export CGO_LDFLAGS_ALLOW=-Wl,-wrap,pthread_create
 override_dh_auto_test:
 	git clone -n https://github.com/golang/lint/ $(DIST_GOPATH)/src/github.com/golang/lint/
@@ -96,11 +91,6 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	echo Should install to: "$(DESTDIR)"
-	# Install LXD libraries
-	install -d $(LXD_DEST)/usr/lib/
-	install $(DIST_GOPATH)/deps/raft/.libs/libraft.so.0.0.7 $(LXD_DEST)/usr/lib/
-	install $(DIST_GOPATH)/deps/dqlite/.libs/libdqlite.so.0.0.1 $(LXD_DEST)/usr/lib/
-	/sbin/ldconfig -nN $(LXD_DEST)/usr/lib/
 	# Install LXD "libexec" binaries
 	install -d $(LXD_DEST)/usr/lib/lxd/
 	install $(DIST_GOPATH)/bin/lxd-agent $(LXD_DEST)/usr/lib/lxd

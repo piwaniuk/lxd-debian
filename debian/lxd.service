@@ -7,6 +7,7 @@ Requires=network-online.target lxc.service lxd.socket
 Environment=LXD_SOCKET=/var/lib/lxd/unix.socket
 ExecStart=/usr/sbin/lxd --group lxd --logfile /var/log/lxd/lxd.log
 ExecStartPost=/usr/sbin/lxd waitready --timeout=600
+ExecStartPre=-/bin/mkdir -p /var/log/lxd/
 KillMode=process
 TimeoutStartSec=300s
 TimeoutStopSec=30s

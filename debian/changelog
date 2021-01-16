@@ -1,8 +1,9 @@
-lxd (4.10-1) UNRELEASED; urgency=medium
+lxd (4.10-2) UNRELEASED; urgency=medium
 
   * Update to version 4.10
+  * Switch to system libraft and dqlite
 
- -- Piotr Iwaniuk <piwaniuk@poczta.onet.pl>  Sun, 10 Jan 2021 14:47:41 +0100
+ -- Piotr Iwaniuk <piwaniuk@poczta.onet.pl>  Sat, 16 Jan 2021 23:25:18 +0100
 
 lxd (4.6-1) unstable; urgency=medium
 
