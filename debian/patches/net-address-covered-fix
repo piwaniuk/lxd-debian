@@ -1,0 +1,54 @@
+Description: Fix LXD utils net unit tests
+ Change IsAddressCovered function so it compared all addresses.
+ .
+ lxd (4.10-1) UNRELEASED; urgency=medium
+ .
+   * Update to version 4.10
+Author: Piotr Iwaniuk <piwaniuk@poczta.onet.pl>
+Origin: https://github.com/lxc/lxd/pull/8350
+Bug: https://github.com/lxc/lxd/issues/8340
+Last-Update: 2021-01-20
+
+--- lxd-4.10.orig/lxd/util/net.go
++++ lxd-4.10/lxd/util/net.go
+@@ -180,30 +180,36 @@ func IsAddressCovered(address1, address2
+ 
+ 	// If address1 contains a host name, let's try to resolve it, in order
+ 	// to compare the actual IPs.
++	addresses1 := []string{host1}
+ 	if host1 != "" {
+ 		ip1 := net.ParseIP(host1)
+ 		if ip1 == nil {
+ 			ips, err := net.LookupHost(host1)
+ 			if err == nil && len(ips) > 0 {
+-				host1 = ips[0]
++				addresses1 = ips
+ 			}
+ 		}
+ 	}
+ 
+ 	// If address2 contains a host name, let's try to resolve it, in order
+ 	// to compare the actual IPs.
++	addresses2 := []string{host2}
+ 	if host2 != "" {
+ 		ip2 := net.ParseIP(host2)
+ 		if ip2 == nil {
+ 			ips, err := net.LookupHost(host2)
+ 			if err == nil && len(ips) > 0 {
+-				host2 = ips[0]
++				addresses2 = ips
+ 			}
+ 		}
+ 	}
+ 
+-	if host2 == host1 {
+-		return true
++	for _, a1 := range addresses1 {
++		for _, a2 := range addresses2 {
++			if a1 == a2 {
++				return true
++			}
++		}
+ 	}
+ 
+ 	// If address2 is using an IPv4 wildcard for the host, then address2 is
